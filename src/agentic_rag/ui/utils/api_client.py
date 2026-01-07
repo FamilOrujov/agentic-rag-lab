@@ -1,16 +1,20 @@
 """API client for FastAPI backend communication."""
 from __future__ import annotations
 
+import os
 import requests
 from dataclasses import dataclass, field
 from typing import Any
+
+
+DEFAULT_API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 
 @dataclass
 class APIClient:
     """Client for the Agentic RAG FastAPI backend."""
     
-    base_url: str = "http://127.0.0.1:8000"
+    base_url: str = DEFAULT_API_BASE_URL
     timeout: int = 300  # 5 minutes for slow models
     
     def health_check(self) -> bool:
@@ -194,10 +198,9 @@ class APIClient:
 _client: APIClient | None = None
 
 
-def get_client(base_url: str = "http://127.0.0.1:8000") -> APIClient:
+def get_client(base_url: str = DEFAULT_API_BASE_URL) -> APIClient:
     """Get or create the API client."""
     global _client
     if _client is None or _client.base_url != base_url:
         _client = APIClient(base_url=base_url)
     return _client
-
