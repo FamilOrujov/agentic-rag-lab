@@ -19,6 +19,7 @@ import sys
 import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
+import math
 from typing import Any
 
 # Using deprecated ragas.metrics imports because ragas.metrics.collections
@@ -294,24 +295,39 @@ def push_scores_to_langfuse(
     # Ragas preserves dataset row order
     df["trace_id"] = [row.trace_id for row in rows]
 
+    def _safe_score(value: Any) -> float | None:
+        try:
+            score = float(value)
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(score):
+            return None
+        return score
+
     for _, df_row in df.iterrows():
         trace_id = str(df_row["trace_id"])
+        if not trace_id:
+            continue
 
         for metric in metrics:
             name = metric.name
             value = df_row.get(name)
 
-            if value is None:
+            score = _safe_score(value)
+            if score is None:
                 continue
 
-            lf.create_score(
-                trace_id=trace_id,
-                name=name,
-                value=float(value),
-                data_type="NUMERIC",
-                score_id=f"{trace_id}-{name}",  # Prevents duplicate scores
-                comment="ragas batch eval",
-            )
+            try:
+                lf.create_score(
+                    trace_id=trace_id,
+                    name=name,
+                    value=score,
+                    data_type="NUMERIC",
+                    score_id=f"{trace_id}-{name}",  # Prevents duplicate scores
+                    comment="ragas batch eval",
+                )
+            except Exception as exc:
+                print(f"Warning: failed to push score '{name}' for trace {trace_id}: {exc}")
 
     lf.flush()
 
