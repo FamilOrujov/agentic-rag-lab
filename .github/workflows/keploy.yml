@@ -1,0 +1,27 @@
+name: Keploy Replay
+
+on:
+  workflow_dispatch:
+
+jobs:
+  keploy-test:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Verify Keploy is installed
+        run: |
+          if ! command -v keploy >/dev/null 2>&1; then
+            echo "Keploy is not installed on this runner."
+            echo "Install it and re-run this workflow."
+            exit 1
+          fi
+      - name: Run Keploy tests
+        run: bash scripts/keploy_test.sh

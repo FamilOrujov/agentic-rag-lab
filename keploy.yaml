@@ -1,0 +1,14 @@
+path: "."
+command: "bash scripts/keploy_app.sh"
+port: 8000
+debug: true
+
+test:
+  delay: 2
+  apiTimeout: 15
+  ignoreOrdering: false
+  globalNoise:
+    global: {}
+    test-sets: {}
+record:
+  filters: []
