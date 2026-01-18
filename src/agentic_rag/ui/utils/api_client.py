@@ -159,21 +159,6 @@ class APIClient:
         except Exception as e:
             return {"error": str(e)}
     
-    def warmup_ollama(self, model: str = "gemma3:4b") -> bool:
-        """
-        Warm up Ollama by making a simple request.
-        """
-        try:
-            # Make a simple query to load the model
-            resp = requests.post(
-                "http://localhost:11434/api/generate",
-                json={"model": model, "prompt": "hi", "stream": False},
-                timeout=60,
-            )
-            return resp.status_code == 200
-        except Exception:
-            return False
-    
     def list_ollama_models(self) -> list[str]:
         """
         Fetch list of installed Ollama models via the Ollama API.

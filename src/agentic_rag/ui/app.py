@@ -31,11 +31,8 @@ def load_css() -> None:
     else:
         css = ""
     
-    # Dynamic theme CSS
-    theme = st.session_state.get("theme", "dark")
-    
-    if theme == "dark":
-        theme_css = """
+    # Dark theme CSS (only theme)
+    theme_css = """
         .stApp {
             background-color: #121212;
             color: #f5f5f5;
@@ -183,111 +180,6 @@ def load_css() -> None:
             color: #b0b0b0;
         }
         """
-    else:
-        theme_css = """
-        .stApp {
-            background-color: #ffffff;
-            color: #1a1a1a;
-        }
-
-        div[data-testid="stAppViewContainer"], section.main {
-            background-color: #ffffff;
-        }
-        
-        section[data-testid="stSidebar"] {
-            background-color: #f7f7f8;
-            border-right: 1px solid #e5e5e5;
-        }
-        
-        .stChatMessage {
-            background-color: #f7f7f8;
-            border: 1px solid #e5e5e5;
-        }
-        
-        .stChatInputContainer {
-            background-color: #ffffff;
-            border-top: 1px solid #e5e5e5;
-        }
-        
-        .stTextInput input, .stTextArea textarea, .stSelectbox > div > div {
-            background-color: #ffffff !important;
-            color: #1a1a1a !important;
-            border-color: #e5e5e5 !important;
-        }
-        
-        .stButton button {
-            background-color: #f7f7f8;
-            color: #1a1a1a;
-            border-color: #e5e5e5;
-        }
-        
-        .stButton button:hover {
-            background-color: #ececec;
-            border-color: #10a37f;
-        }
-        
-        .stExpander {
-            background-color: #f7f7f8;
-            border: 1px solid #e5e5e5;
-        }
-        
-        .stDivider {
-            border-color: #e5e5e5;
-        }
-        
-        .stCaption {
-            color: #6b6b6b;
-        }
-
-        .sidebar-status-line {
-            color: #1a1a1a !important;
-        }
-
-        .sidebar-status-model {
-            color: #4b4b4b !important;
-        }
-
-        .sidebar-status-model code {
-            color: #0d8a6a !important;
-        }
-        
-        div[data-testid="stFileUploader"] {
-            background-color: #f7f7f8;
-            border: 1px dashed #e5e5e5;
-            border-radius: 12px;
-        }
-        
-        .stTabs [data-baseweb="tab-list"] {
-            background-color: #f7f7f8;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-            color: #6b6b6b;
-        }
-        
-        .stTabs [aria-selected="true"] {
-            color: #1a1a1a;
-        }
-
-        /* Doc mention popup */
-        .doc-mention-popup {
-            background-color: #ffffff;
-            border: 1px solid #e5e5e5;
-            color: #1a1a1a;
-        }
-
-        .doc-mention-item {
-            color: #1a1a1a;
-        }
-
-        .doc-mention-item:hover {
-            background-color: #f2f2f2;
-        }
-
-        .doc-mention-empty {
-            color: #6b6b6b;
-        }
-        """
     
     # Combine CSS
     full_css = f"""
@@ -295,24 +187,18 @@ def load_css() -> None:
     {css}
     {theme_css}
     
-    /* Smooth transitions for theme switching */
-    .stApp, section[data-testid="stSidebar"], .stChatMessage,
-    .stTextInput input, .stButton button, .stExpander {{
-        transition: all 0.3s ease;
-    }}
-    
     /* Hide Streamlit branding (keep header for sidebar toggle) */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: visible;}}
     header[data-testid="stHeader"] {{
-        background: {"#121212" if theme == "dark" else "#ffffff"} !important;
-        border-bottom: 1px solid {"#2a2a2a" if theme == "dark" else "#e5e5e5"} !important;
+        background: #121212 !important;
+        border-bottom: 1px solid #2a2a2a !important;
         box-shadow: none !important;
         backdrop-filter: none !important;
     }}
     header[data-testid="stHeader"]::before {{
-        background: {"#121212" if theme == "dark" else "#ffffff"} !important;
+        background: #121212 !important;
     }}
     header [data-testid="stToolbar"] {{
         background: transparent !important;
@@ -335,16 +221,16 @@ def load_css() -> None:
     }}
     
     ::-webkit-scrollbar-track {{
-        background: {"#1a1a1a" if theme == "dark" else "#f7f7f8"};
+        background: #1a1a1a;
     }}
     
     ::-webkit-scrollbar-thumb {{
-        background: {"#3d3d3d" if theme == "dark" else "#d4d4d4"};
+        background: #3d3d3d;
         border-radius: 4px;
     }}
     
     ::-webkit-scrollbar-thumb:hover {{
-        background: {"#4d4d4d" if theme == "dark" else "#b4b4b4"};
+        background: #4d4d4d;
     }}
     
     /* Chat message animations */
@@ -386,7 +272,7 @@ def load_css() -> None:
     div[data-testid="stChatInput"] {{
         position: relative !important;
         padding: 16px 0 20px !important;
-        background: {"#121212" if theme == "dark" else "#ffffff"} !important;
+        background: #121212 !important;
         z-index: 1000 !important;
         pointer-events: auto !important;
         overflow: visible !important;
@@ -400,9 +286,9 @@ def load_css() -> None:
     
     div[data-testid="stChatInput"] textarea {{
         pointer-events: auto !important;
-        background-color: {"#2a2a2a" if theme == "dark" else "#ffffff"} !important;
-        color: {"#f5f5f5" if theme == "dark" else "#1a1a1a"} !important;
-        border: 1px solid {"#505050" if theme == "dark" else "#e5e5e5"} !important;
+        background-color: #2a2a2a !important;
+        color: #f5f5f5 !important;
+        border: 1px solid #505050 !important;
         border-radius: 24px !important;
         padding: 12px 48px 12px 16px !important;
         width: 100% !important;
@@ -415,7 +301,7 @@ def load_css() -> None:
     }}
     
     div[data-testid="stChatInput"] textarea::placeholder {{
-        color: {"#888888" if theme == "dark" else "#999999"} !important;
+        color: #888888 !important;
     }}
 
     .doc-mention-popup {{

@@ -10,7 +10,7 @@ from langchain_core.runnables import RunnableConfig
 from agentic_rag.agents.graph import get_agentic_rag_graph, get_agentic_rag_graph_with_memory
 from agentic_rag.agents.state import AgentState
 from agentic_rag.db.checkpoint import get_checkpointer
-from agentic_rag.ops.langfuse import client as lf_client, new_handler, make_trace_id
+from agentic_rag.ops.langfuse import client as lf_client, new_handler, make_trace_id, flush as lf_flush
 from agentic_rag.rag.answering import Source, answer_question
 from agentic_rag.rag.retrieval import retrieve
 from agentic_rag.rag.schemas import (
@@ -163,6 +163,9 @@ def ask_endpoint(req: AskRequest) -> AskResponse:
             # Write eval-ready payload at TRACE level
             span.update_trace(input=trace_input, output=trace_output)
 
+        # Flush Langfuse to ensure trace is sent before response returns
+        lf_flush()
+
     else:
         # Tracing disabled
         response, used_sources = answer_question(
@@ -313,6 +316,9 @@ def ask_agentic(req: AgenticAskRequest) -> AgenticAskResponse:
 
         # write eval-ready payload at TRACE level
         span.update_trace(input=trace_input, output=trace_output)
+
+    # Flush Langfuse to ensure trace is sent before response returns
+    lf_flush()
 
     return AgenticAskResponse(
         answer=response,

@@ -1,18 +1,33 @@
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN pip install --no-cache-dir uv
 
-COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen
+# Copy lightweight dependency file (excludes PyTorch ~2GB+)
+COPY pyproject.docker.toml ./pyproject.toml
+COPY README.md ./
 
+# Copy source code before sync so we can install the project
 COPY src ./src
 COPY scripts ./scripts
 
+# Generate lock file and install dependencies INCLUDING the project
+RUN uv lock && uv sync --frozen
+
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "agentic_rag.api.main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000"]
+# Healthcheck with longer start period for first request warmup
+HEALTHCHECK --interval=10s --timeout=10s --start-period=120s --retries=6 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run directly without uv run (deps already installed)
+CMD [".venv/bin/python", "-m", "uvicorn", "agentic_rag.api.main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000"]

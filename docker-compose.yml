@@ -6,14 +6,15 @@ services:
       POSTGRES_USER: agentic
       POSTGRES_PASSWORD: agentic
     ports:
-      - "5433:5432"  # Use 5433 to avoid conflict with local PostgreSQL
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U agentic -d agentic_rag"]
-      interval: 5s
+      interval: 2s
       timeout: 5s
-      retries: 5
+      start_period: 10s
+      retries: 10
 
   api:
     build:
@@ -26,6 +27,8 @@ services:
       CHROMA_DIR: /data/chroma
       UPLOAD_DIR: /data/uploads
       POSTGRES_DSN: postgresql://agentic:agentic@postgres:5432/agentic_rag
+      LANGFUSE_BASE_URL: http://host.docker.internal:3000
+      LANGFUSE_HOST: http://host.docker.internal:3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -36,6 +39,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 10s
+      start_period: 30s
+      retries: 10
 
   ui:
     build:
@@ -46,7 +55,14 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 5s
+      timeout: 10s
+      start_period: 20s
+      retries: 6
 
 volumes:
   pgdata:

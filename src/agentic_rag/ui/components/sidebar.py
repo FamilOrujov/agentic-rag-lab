@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import html
 import streamlit as st
-from agentic_rag.ui.utils.state import toggle_theme, reset_chat
+from agentic_rag.ui.utils.state import reset_chat
 from agentic_rag.ui.utils.api_client import get_client
 
 
@@ -39,15 +39,8 @@ def _refresh_ollama_models() -> list[str]:
 def render_sidebar() -> None:
     """Render the settings sidebar."""
     with st.sidebar:
-        # Header with theme toggle
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.markdown("## ⚡ Agentic RAG")
-        with col2:
-            theme_icon = "🌙" if st.session_state.theme == "dark" else "☀️"
-            if st.button(theme_icon, help="Toggle theme", key="theme_toggle"):
-                toggle_theme()
-                st.rerun()
+        # Header
+        st.markdown("## ⚡ Agentic RAG")
         
         st.divider()
         
@@ -113,19 +106,9 @@ def render_sidebar() -> None:
         
         # Ollama controls
         if provider == "ollama":
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("🔥 Warm Up", help="Load model into memory"):
-                    with st.spinner("Warming up..."):
-                        success = client.warmup_ollama(st.session_state.model_name)
-                        if success:
-                            st.success("Model ready!")
-                        else:
-                            st.error("Warm-up failed")
-            with col2:
-                if st.button("🔄 Refresh", help="Refresh available models"):
-                    _refresh_ollama_models()
-                    st.rerun()
+            if st.button("🔄 Refresh", help="Refresh available models", use_container_width=True):
+                _refresh_ollama_models()
+                st.rerun()
         
         st.divider()
         
