@@ -20,7 +20,7 @@ ApiKey = SecretStr | str | None
 
 
 def get_chat_model(
-    provider: Provider = "ollama",
+    provider: str = "ollama",
     model: str | None = None,
     api_key: ApiKey = None,
     temperature: float = 0.0,

@@ -63,9 +63,6 @@ def add_message(role: Literal["user", "assistant"], content: str, **kwargs) -> N
     st.session_state.messages.append(msg)
 
 
-def toggle_theme() -> None:
-    """Toggle between dark and light theme."""
-    st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
 
 
 def get_session_id() -> str | None:

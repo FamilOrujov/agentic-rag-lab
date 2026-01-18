@@ -82,3 +82,25 @@ def make_trace_id(seed: str) -> str:
     Langfuse recommends this for distributed tracing and correlation. :contentReference[oaicite:3]{index=3}
     """
     return Langfuse.create_trace_id(seed=seed)
+
+
+def flush() -> None:
+    """
+    Flush the Langfuse client to ensure all traces are sent.
+    Call this after completing a trace to ensure it reaches the server
+    before the request response is returned.
+    """
+    lf = client()
+    if lf is not None:
+        lf.flush()
+
+
+def shutdown() -> None:
+    """
+    Shutdown the Langfuse client gracefully.
+    Call on application shutdown to flush remaining traces.
+    """
+    lf = client()
+    if lf is not None:
+        lf.flush()
+        lf.shutdown()

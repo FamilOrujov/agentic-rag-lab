@@ -1,17 +1,32 @@
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN pip install --no-cache-dir uv
 
-COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen
+# Copy lightweight dependency file (excludes PyTorch ~2GB+)
+COPY pyproject.docker.toml ./pyproject.toml
+COPY README.md ./
 
+# Copy source code before sync so we can install the project
 COPY src ./src
+
+# Generate lock file and install dependencies INCLUDING the project
+RUN uv lock && uv sync --frozen
 
 EXPOSE 8501
 
-CMD ["uv", "run", "streamlit", "run", "src/agentic_rag/ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--browser.gatherUsageStats", "false"]
+# Healthcheck for Streamlit
+HEALTHCHECK --interval=10s --timeout=10s --start-period=60s --retries=5 \
+    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+
+# Run directly without uv run (deps already installed)
+CMD [".venv/bin/python", "-m", "streamlit", "run", "src/agentic_rag/ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--browser.gatherUsageStats", "false"]

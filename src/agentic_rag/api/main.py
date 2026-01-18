@@ -22,15 +22,21 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     from agentic_rag.db.checkpoint import setup_checkpointer_tables, shutdown_pool
+    from agentic_rag.ops.langfuse import shutdown as lf_shutdown, langfuse_enabled
     
     if setup_checkpointer_tables():
         logger.info("PostgreSQL checkpoint tables initialized")
     else:
         logger.info("PostgreSQL not configured, memory disabled")
     
+    if langfuse_enabled():
+        logger.info("Langfuse tracing enabled")
+    
     yield
     
     # Shutdown
+    lf_shutdown()
+    logger.info("Langfuse client shutdown")
     shutdown_pool()
     logger.info("Database pool closed")
 
