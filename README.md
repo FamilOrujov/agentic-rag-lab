@@ -332,7 +332,7 @@ ollama pull gemma3:4b
 ollama pull mxbai-embed-large:latest
 ```
 
-### 5.2 Installation with uv
+### 5.2 Installation with uv (Recommended)
 
 I recommend uv for dependency management because it provides fast resolution and consistent environments. Install uv following the official documentation, then clone and sync.
 
