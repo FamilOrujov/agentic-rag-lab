@@ -19,7 +19,7 @@
   <a href="https://docker.com"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
 </p>
 
-
+<p align="center">
   <em>Agentic RAG is a production ready document question answering system that I built to demonstrate how retrieval augmented generation can be elevated through intelligent routing and conversation memory. The system autonomously decides whether to retrieve documents or respond directly, while maintaining conversational context across interactions through PostgreSQL backed checkpointing.</em>
 </p>
 
