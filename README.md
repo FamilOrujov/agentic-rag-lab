@@ -107,23 +107,86 @@ I organized the repository following a modular architecture that separates conce
 
 ```
 agentic-rag/
+│
 ├── src/
 │   └── agentic_rag/
-│       ├── agents/          # LangGraph state machine implementation
-│       ├── api/             # FastAPI application and route handlers
-│       ├── config/          # Pydantic settings management
-│       ├── db/              # PostgreSQL checkpoint persistence
-│       ├── ops/             # Langfuse observability integration
-│       ├── rag/             # Retrieval, ingestion, and LLM utilities
-│       └── ui/              # Streamlit dashboard components
-├── scripts/                 # Utility scripts including RAGAS evaluation
-├── tests/                   # Pytest test suite
-├── data/                    # Document upload storage
-├── Dockerfile.api           # API service container definition
-├── Dockerfile.ui            # UI service container definition
-├── docker-compose.yml       # Multi service orchestration
-├── pyproject.toml           # Project metadata and dependencies
-└── requirements.txt         # Pip compatible dependency list
+│       │
+│       ├── agents/                        # LangGraph state machine implementation
+│       │   ├── __init__.py
+│       │   ├── graph.py                   # State graph builder and compilation
+│       │   ├── nodes.py                   # Node functions (route, retrieve, answer, finalize)
+│       │   └── state.py                   # TypedDict state schema definition
+│       │
+│       ├── api/                           # FastAPI application and route handlers
+│       │   ├── __init__.py
+│       │   ├── main.py                    # Application factory and lifespan management
+│       │   └── routes/
+│       │       ├── __init__.py
+│       │       ├── chat.py                # Chat endpoints (retrieve, ask, ask_agentic)
+│       │       ├── documents.py           # Document upload and ingestion endpoint
+│       │       └── health.py              # Health check endpoint
+│       │
+│       ├── config/                        # Pydantic settings management
+│       │   ├── __init__.py
+│       │   └── config.py                  # Centralized environment configuration
+│       │
+│       ├── db/                            # PostgreSQL checkpoint persistence
+│       │   ├── __init__.py
+│       │   └── checkpoint.py              # Connection pooling and LangGraph saver
+│       │
+│       ├── ops/                           # Langfuse observability integration
+│       │   ├── __init__.py
+│       │   └── langfuse.py                # Tracing client and callback handlers
+│       │
+│       ├── rag/                           # Retrieval, ingestion, and LLM utilities
+│       │   ├── __init__.py
+│       │   ├── answering.py               # Answer synthesis with citations
+│       │   ├── extractors.py              # PDF, DOCX, TXT, HTML text extraction
+│       │   ├── ingestion.py               # Document processing pipeline
+│       │   ├── llm.py                     # Ollama chat model factory
+│       │   ├── retrieval.py               # Vector similarity search
+│       │   ├── schemas.py                 # Pydantic request/response models
+│       │   ├── splitter.py                # Recursive character text splitter
+│       │   └── vectorstore.py             # ChromaDB initialization
+│       │
+│       └── ui/                            # Streamlit dashboard components
+│           ├── __init__.py
+│           ├── app.py                     # Main Streamlit application entry
+│           ├── components/
+│           │   ├── __init__.py
+│           │   ├── chat.py                # Chat message display and input
+│           │   ├── documents.py           # Document upload interface
+│           │   └── sidebar.py             # Settings and session controls
+│           ├── styles/
+│           │   └── main.css               # Custom dark theme styling
+│           └── utils/
+│               ├── __init__.py
+│               ├── api_client.py          # HTTP client for backend API
+│               └── state.py               # Streamlit session state management
+│
+├── scripts/                               # Utility scripts including RAGAS evaluation
+│   ├── ragas_eval_langfuse.py             # Batch evaluation with Langfuse integration
+│   ├── langfuse_auth_check.py             # Langfuse credentials verification
+│   ├── langfuse_smoke_trace.py            # Tracing smoke test
+│   └── run_ui.sh                          # UI startup script
+│
+├── tests/                                 # Pytest test suite
+│   ├── __init__.py
+│   ├── test_health.py                     # API health endpoint tests
+│   ├── test_parse_file_tags.py            # File tag parsing tests
+│   └── test_ragas_normalize.py            # RAGAS normalization tests
+│
+├── data/                                  # Document upload storage
+│   └── uploads/                           # Stored uploaded files
+│
+├── Dockerfile.api                         # API service container definition
+├── Dockerfile.ui                          # UI service container definition
+├── docker-compose.yml                     # Multi service orchestration
+├── pyproject.toml                         # Project metadata and dependencies
+├── pyproject.docker.toml                  # Docker optimized dependencies (no PyTorch)
+├── requirements.txt                       # Pip compatible dependency list
+├── .env.example                           # Environment variable template
+└── README.md                              # Project documentation
 ```
 
 ### 2.2 Core Components
