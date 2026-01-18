@@ -808,8 +808,4 @@ uv run pytest tests/ -v --cov=src/agentic_rag --cov-report=term-missing
 
 Tests cover core functionality including metadata filter construction and retrieval logic. I structured tests to run without external dependencies so they execute quickly during development.
 
----
 
-## 10. License
-
-This project is provided for educational and research purposes. See the LICENSE file for terms of use.
