@@ -8,23 +8,18 @@
   <a href="https://langchain-ai.github.io/langgraph/"><img src="https://img.shields.io/badge/LangGraph-1.0+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" alt="LangGraph"></a>
   <a href="https://www.langchain.com/"><img src="https://img.shields.io/badge/LangChain-1.2+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" alt="LangChain"></a>
   <a href="https://www.trychroma.com"><img src="https://img.shields.io/badge/ChromaDB-1.4+-FF6F61?style=for-the-badge&logoColor=white" alt="ChromaDB"></a>
-</p>
-
-<p align="center">
   <a href="https://streamlit.io"><img src="https://img.shields.io/badge/Streamlit-1.52+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit"></a>
   <a href="https://docs.pydantic.dev/"><img src="https://img.shields.io/badge/Pydantic-2.12+-E92063?style=for-the-badge&logo=pydantic&logoColor=white" alt="Pydantic"></a>
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
   <a href="https://ollama.com"><img src="https://img.shields.io/badge/Ollama-Local_LLM-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama"></a>
-</p>
-
-<p align="center">
+  <p align="center">
   <a href="https://langfuse.com"><img src="https://img.shields.io/badge/Langfuse-Observability-4F46E5?style=for-the-badge&logoColor=white" alt="Langfuse"></a>
   <a href="https://docs.ragas.io/"><img src="https://img.shields.io/badge/RAGAS-Evaluation-FF6B6B?style=for-the-badge&logoColor=white" alt="RAGAS"></a>
   <a href="https://docs.pytest.org/"><img src="https://img.shields.io/badge/Pytest-8.3+-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest"></a>
   <a href="https://docker.com"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
 </p>
 
-<p align="center">
+
   <em>Agentic RAG is a production ready document question answering system that I built to demonstrate how retrieval augmented generation can be elevated through intelligent routing and conversation memory. The system autonomously decides whether to retrieve documents or respond directly, while maintaining conversational context across interactions through PostgreSQL backed checkpointing.</em>
 </p>
 
