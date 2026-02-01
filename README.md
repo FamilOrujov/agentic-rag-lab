@@ -8,20 +8,18 @@
   <a href="https://langchain-ai.github.io/langgraph/"><img src="https://img.shields.io/badge/LangGraph-1.0+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" alt="LangGraph"></a>
   <a href="https://www.langchain.com/"><img src="https://img.shields.io/badge/LangChain-1.2+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" alt="LangChain"></a>
   <a href="https://www.trychroma.com"><img src="https://img.shields.io/badge/ChromaDB-1.4+-FF6F61?style=for-the-badge&logoColor=white" alt="ChromaDB"></a>
-</p>
-
-<p align="center">
   <a href="https://streamlit.io"><img src="https://img.shields.io/badge/Streamlit-1.52+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit"></a>
   <a href="https://docs.pydantic.dev/"><img src="https://img.shields.io/badge/Pydantic-2.12+-E92063?style=for-the-badge&logo=pydantic&logoColor=white" alt="Pydantic"></a>
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
-  <a href="https://ollama.com"><img src="https://img.shields.io/badge/Ollama-Local_LLM-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama"></a>
-</p>
-
-<p align="center">
+  <a href="https://ollama.ai/"><img src="https://img.shields.io/badge/Ollama-Local_LLM-FF6B35?style=for-the-badge" alt="Ollama"></a>
   <a href="https://langfuse.com"><img src="https://img.shields.io/badge/Langfuse-Observability-4F46E5?style=for-the-badge&logoColor=white" alt="Langfuse"></a>
   <a href="https://docs.ragas.io/"><img src="https://img.shields.io/badge/RAGAS-Evaluation-FF6B6B?style=for-the-badge&logoColor=white" alt="RAGAS"></a>
   <a href="https://docs.pytest.org/"><img src="https://img.shields.io/badge/Pytest-8.3+-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest"></a>
   <a href="https://docker.com"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
+</p>
+
+<p align="center">
+  <img src="assets/agentic_rag.png" alt="Agentic RAG Chat Interface" width="800">
 </p>
 
 <p align="center">
@@ -75,7 +73,6 @@
    - 8.2 [LLM Configuration](#82-llm-configuration)
    - 8.3 [Storage Settings](#83-storage-settings)
 9. [Testing](#9-testing)
-10. [License](#10-license)
 
 ---
 
@@ -113,23 +110,86 @@ I organized the repository following a modular architecture that separates conce
 
 ```
 agentic-rag/
+│
 ├── src/
 │   └── agentic_rag/
-│       ├── agents/          # LangGraph state machine implementation
-│       ├── api/             # FastAPI application and route handlers
-│       ├── config/          # Pydantic settings management
-│       ├── db/              # PostgreSQL checkpoint persistence
-│       ├── ops/             # Langfuse observability integration
-│       ├── rag/             # Retrieval, ingestion, and LLM utilities
-│       └── ui/              # Streamlit dashboard components
-├── scripts/                 # Utility scripts including RAGAS evaluation
-├── tests/                   # Pytest test suite
-├── data/                    # Document upload storage
-├── Dockerfile.api           # API service container definition
-├── Dockerfile.ui            # UI service container definition
-├── docker-compose.yml       # Multi service orchestration
-├── pyproject.toml           # Project metadata and dependencies
-└── requirements.txt         # Pip compatible dependency list
+│       │
+│       ├── agents/                        # LangGraph state machine implementation
+│       │   ├── __init__.py
+│       │   ├── graph.py                   # State graph builder and compilation
+│       │   ├── nodes.py                   # Node functions (route, retrieve, answer, finalize)
+│       │   └── state.py                   # TypedDict state schema definition
+│       │
+│       ├── api/                           # FastAPI application and route handlers
+│       │   ├── __init__.py
+│       │   ├── main.py                    # Application factory and lifespan management
+│       │   └── routes/
+│       │       ├── __init__.py
+│       │       ├── chat.py                # Chat endpoints (retrieve, ask, ask_agentic)
+│       │       ├── documents.py           # Document upload and ingestion endpoint
+│       │       └── health.py              # Health check endpoint
+│       │
+│       ├── config/                        # Pydantic settings management
+│       │   ├── __init__.py
+│       │   └── config.py                  # Centralized environment configuration
+│       │
+│       ├── db/                            # PostgreSQL checkpoint persistence
+│       │   ├── __init__.py
+│       │   └── checkpoint.py              # Connection pooling and LangGraph saver
+│       │
+│       ├── ops/                           # Langfuse observability integration
+│       │   ├── __init__.py
+│       │   └── langfuse.py                # Tracing client and callback handlers
+│       │
+│       ├── rag/                           # Retrieval, ingestion, and LLM utilities
+│       │   ├── __init__.py
+│       │   ├── answering.py               # Answer synthesis with citations
+│       │   ├── extractors.py              # PDF, DOCX, TXT, HTML text extraction
+│       │   ├── ingestion.py               # Document processing pipeline
+│       │   ├── llm.py                     # Ollama chat model factory
+│       │   ├── retrieval.py               # Vector similarity search
+│       │   ├── schemas.py                 # Pydantic request/response models
+│       │   ├── splitter.py                # Recursive character text splitter
+│       │   └── vectorstore.py             # ChromaDB initialization
+│       │
+│       └── ui/                            # Streamlit dashboard components
+│           ├── __init__.py
+│           ├── app.py                     # Main Streamlit application entry
+│           ├── components/
+│           │   ├── __init__.py
+│           │   ├── chat.py                # Chat message display and input
+│           │   ├── documents.py           # Document upload interface
+│           │   └── sidebar.py             # Settings and session controls
+│           ├── styles/
+│           │   └── main.css               # Custom dark theme styling
+│           └── utils/
+│               ├── __init__.py
+│               ├── api_client.py          # HTTP client for backend API
+│               └── state.py               # Streamlit session state management
+│
+├── scripts/                               # Utility scripts including RAGAS evaluation
+│   ├── ragas_eval_langfuse.py             # Batch evaluation with Langfuse integration
+│   ├── langfuse_auth_check.py             # Langfuse credentials verification
+│   ├── langfuse_smoke_trace.py            # Tracing smoke test
+│   └── run_ui.sh                          # UI startup script
+│
+├── tests/                                 # Pytest test suite
+│   ├── __init__.py
+│   ├── test_health.py                     # API health endpoint tests
+│   ├── test_parse_file_tags.py            # File tag parsing tests
+│   └── test_ragas_normalize.py            # RAGAS normalization tests
+│
+├── data/                                  # Document upload storage
+│   └── uploads/                           # Stored uploaded files
+│
+├── Dockerfile.api                         # API service container definition
+├── Dockerfile.ui                          # UI service container definition
+├── docker-compose.yml                     # Multi service orchestration
+├── pyproject.toml                         # Project metadata and dependencies
+├── pyproject.docker.toml                  # Docker optimized dependencies (no PyTorch)
+├── requirements.txt                       # Pip compatible dependency list
+├── .env.example                           # Environment variable template
+└── README.md                              # Project documentation
 ```
 
 ### 2.2 Core Components
@@ -224,25 +284,123 @@ The recursive character text splitter segments extracted content into chunks wit
 
 I designed the user interface to provide a chat experience modeled after modern AI assistants. The sidebar contains model selection, session management, and document upload controls. The chat panel displays the conversation with markdown rendering for formatted responses.
 
-Users can mention specific documents using an @ tagging pattern. I implemented this because broad retrieval across all documents sometimes returns irrelevant results when users have uploaded diverse materials. Targeted retrieval improves precision.
+<p align="center">
+  <img src="assets/agentic_rag_02.png" alt="Agentic RAG Chat with Philosophical Queries" width="800">
+</p>
 
-The dark theme styling reflects my preference for comfortable extended use. All CSS is injected through Streamlit's markdown mechanism, keeping the styling customizable without external files.
+The interface demonstrates intelligent routing in action. When I ask questions like "What is the Turing Test?" or "What is the Chinese Room argument?", the system retrieves relevant passages from uploaded documents and synthesizes answers with inline citations. Each response clearly indicates whether the route was "retrieve" (document lookup required) or "direct" (conversational response without retrieval). This transparency helps users understand how the system processes their queries.
+
+Users can mention specific documents using an @ tagging pattern. I implemented this because broad retrieval across all documents sometimes returns irrelevant results when users have uploaded diverse materials. Targeted retrieval improves precision by constraining the vector search to specified document identifiers.
+
+<p align="center">
+  <img src="assets/agentic_rag_03.png" alt="Agentic RAG Table Extraction" width="800">
+</p>
+
+The system excels at structured data extraction from documents. In the screenshot above, I asked for a summary of researchers and their areas, and the system compiled a formatted table directly from the PDF content. This capability relies on careful prompt engineering that instructs the model to preserve tabular structures when they appear in retrieved context.
+
+> [!NOTE]
+> The conversation memory feature requires PostgreSQL to be running. Without it, each query is processed independently and the system cannot resolve references like "tell me more about that" or "the previous topic."
+
+The dark theme styling reflects my preference for comfortable extended use. All CSS is injected through Streamlit's markdown mechanism, keeping the styling customizable without external files. The sidebar collapses cleanly on mobile devices, though the interface is optimized for desktop use where document reading and chat happen simultaneously.
+
 
 ### 4.5 Langfuse Observability
 
-I integrated distributed tracing to capture the complete lifecycle of each request. Traces include input queries, retrieved contexts, model outputs, and latency metrics. This visibility is essential for debugging production issues and understanding system behavior.
+I integrated distributed tracing to capture the complete lifecycle of each request. Understanding what happens inside an LLM application is fundamentally different from traditional software observability. Token counts, latencies, prompt templates, and retrieved contexts all matter for debugging and optimization. Langfuse provides this visibility through structured traces that I can query, filter, and analyze.
 
-The callback handler propagates trace context through LangGraph node invocations, enabling end to end visibility. I structured traces with consistent naming so they can be filtered and aggregated in the Langfuse dashboard.
+<p align="center">
+  <img src="assets/langfuse_analyze_traces.png" alt="Langfuse Trace Analysis Dashboard" width="900">
+</p>
 
-Traces tagged for RAGAS evaluation include structured input and output payloads matching the schema expected by the evaluation pipeline. This eliminates transformation steps between tracing and evaluation.
+The screenshot above shows the Langfuse dashboard analyzing a trace from my system. On the left panel, I can see a list of all traces filtered by various criteria including timestamps, user sessions, tags, and latency ranges. The center panel shows the hierarchical trace structure, revealing exactly how the LangGraph state machine executed. Each node in the graph corresponds to a span in the trace: the router decision, the retrieval operation, the answer synthesis, and the finalization step. On the right panel, I can inspect the full input and output for any selected span, including the complete prompt sent to the LLM and the generated response.
+
+The callback handler propagates trace context through LangGraph node invocations, enabling end to end visibility. I structured traces with consistent naming conventions so they can be filtered and aggregated meaningfully. For example, all retrieval operations are named `retrieve` and all routing decisions are named `route`, making it trivial to compute aggregate statistics like "average retrieval latency" or "percentage of queries routed to direct response."
+
+> [!IMPORTANT]
+> Langfuse requires three environment variables for authentication: `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL`. Without these, tracing silently degrades and no data is captured. I recommend running the `scripts/langfuse_auth_check.py` script after configuration to verify connectivity.
+
+The trace metadata I capture includes the session identifier, the route decision (retrieve or direct), the number of chunks retrieved, and whether memory was enabled for the conversation. This metadata enables powerful filtering queries like "show me all traces where the route was retrieve but faithfulness was below 0.5" which directly identifies retrieval or synthesis failures.
+
+Traces tagged for RAGAS evaluation include structured input and output payloads matching the schema expected by the evaluation pipeline. The input contains the user question, the output contains the generated answer, and the contexts field captures the retrieved chunks. This eliminates transformation steps between tracing and evaluation, letting me run RAGAS directly on production data.
+
+> [!NOTE]
+> Langfuse can be self hosted or used as a cloud service. For local development, I run Langfuse via Docker Compose on port 3000. The connection remains stable even when the Langfuse server restarts because I implemented lazy connection handling that retries gracefully.
+
 
 ### 4.6 RAGAS Evaluation
 
-I built the evaluation script to fetch traces from Langfuse by tag and score them using RAGAS metrics. The metrics include Faithfulness, which measures whether answers are grounded in retrieved context, and Context Precision, which measures whether retrieved chunks are relevant to the question.
+RAGAS (Retrieval Augmented Generation Assessment) is the evaluation framework I chose for quantifying the quality of my RAG pipeline. Unlike simple metrics like BLEU or ROUGE that compare surface level text similarity, RAGAS uses LLM based judgments to assess semantic properties that actually matter for RAG systems: Is the answer faithful to the retrieved context? Is the retrieved context relevant to the question?
 
-Evaluation uses local Ollama models for both LLM judgments and embeddings, keeping the process entirely offline. Computed scores are pushed back to Langfuse and attached to the original traces for analysis.
+I built the evaluation script to fetch traces from Langfuse by tag and score them using RAGAS metrics. The script runs entirely locally using Ollama, which means I can iterate on evaluation without incurring API costs or sending data externally.
 
-I added this capability because qualitative review does not scale. With automated metrics, I can compare prompt variations, model upgrades, and retrieval configurations quantitatively.
+**Faithfulness** measures whether the generated answer is grounded in the retrieved context. A faithfulness score of 1.0 means every claim in the answer can be traced back to the context. A low faithfulness score indicates hallucination, where the model generated information not present in the retrieved chunks. I found this metric invaluable for catching cases where the model confidently stated facts that existed nowhere in my documents.
+
+**Context Precision** (specifically `llm_context_precision_without_reference`) measures whether the retrieved chunks are relevant to answering the question. High context precision means the retrieval system is finding the right information. Low context precision indicates that irrelevant chunks are being retrieved, which wastes context window space and can confuse the answering model.
+
+> [!WARNING]
+> RAGAS evaluation requires significant compute resources because each metric involves multiple LLM calls. For a batch of 50 traces, expect evaluation to take 2+ hours depending on your hardware and model choice. I run evaluations during off hours and prioritize the most important traces.
+
+#### First Evaluation Run
+
+I started by evaluating 53 traces from my initial production deployment. The evaluation took over 2 hours to complete, with several timeout errors occurring during the process.
+
+<p align="center">
+  <img src="assets/ragas_01.png" alt="RAGAS First Evaluation Run with 53 Traces" width="800">
+</p>
+
+The terminal output shows the evaluation processing 106 metric computations (53 traces × 2 metrics each). Despite timeout errors on some traces, the script continued gracefully and pushed all successful scores to Langfuse. The results were disappointing.
+
+<p align="center">
+  <img src="assets/scores_weak.png" alt="RAGAS Scores Dashboard Showing Weak Performance" width="800">
+</p>
+
+The dashboard revealed weak performance: mean faithfulness of 0.69 and mean context precision of only 0.45. These scores indicated significant issues with both answer grounding and retrieval relevance. When I investigated the failing traces, I discovered several root causes:
+
+1. **Chunking boundaries** that split relevant information across multiple chunks, causing the retriever to return only partial context
+2. **Embedding model limitations** where semantically similar but lexically different queries failed to match relevant documents
+3. **Prompt template issues** where the answer synthesis instruction did not sufficiently emphasize sticking to provided context
+
+#### Improvement Iterations
+
+After addressing these issues through prompt tuning and retrieval configuration adjustments, I ran two additional evaluation batches to measure the impact. Each batch evaluated 20 traces with improved pipeline configuration.
+
+<p align="center">
+  <img src="assets/ragas_02.png" alt="RAGAS Second Evaluation Run" width="800">
+</p>
+
+<p align="center">
+  <img src="assets/ragas_03.png" alt="RAGAS Third Evaluation Run" width="800">
+</p>
+
+Both runs completed successfully with all 40 metrics computed per batch. The evaluation times remained consistent at approximately 1 hour per 20 trace batch.
+
+<p align="center">
+  <img src="assets/scores_moderate.png" alt="RAGAS Scores Dashboard Showing Moderate Performance" width="800">
+</p>
+
+The improved results show substantial gains: mean faithfulness increased from 0.69 to 0.84 (a 22% improvement) and mean context precision increased from 0.45 to 0.76 (a 69% improvement). The distribution histogram shifted notably, with most scores now clustering in the 0.8 to 1.0 range rather than the 0.4 to 0.6 range.
+
+#### Evaluation Metrics Summary
+
+| Evaluation Run | Traces | Total Time | Time per Trace | Faithfulness (Mean) | Context Precision (Mean) | Std Dev (Faith) | Std Dev (Context) |
+|----------------|--------|------------|----------------|---------------------|--------------------------|-----------------|-------------------|
+| First Run | 53 | 2h 34m 18s | 87.35s | 0.69 | 0.45 | 0.44 | 0.44 |
+| Second Run | 20 | 1h 05m 12s | 97.88s | 0.84 | 0.76 | 0.29 | 0.38 |
+| Third Run | 20 | 1h 09m 40s | 104.56s | 0.84 | 0.76 | 0.29 | 0.38 |
+| **Total** | **93** | **4h 49m 10s** | **93.26s avg** | | | | |
+
+> [!NOTE]
+> The time per trace increased slightly in later runs because I was using a more thorough prompt for metric computation. The quality improvement justified the additional compute cost.
+
+> [!IMPORTANT]
+> RAGAS metrics are computed using LLM judgments, which means they inherit the biases and limitations of the judge model. I use the same model for evaluation that I use for generation to maintain consistency, but be aware that evaluation quality depends on judge model capability.
+
+The evaluation script pushes computed scores back to Langfuse as score annotations attached to each trace. This integration means I can visualize score distributions directly in the Langfuse dashboard without exporting data. I added this capability because qualitative review does not scale. With automated metrics, I can compare prompt variations, model upgrades, and retrieval configurations quantitatively. Every change I make to the pipeline now includes a before and after RAGAS evaluation to measure impact.
+
+> [!TIP]
+> Start by evaluating a small batch (10 to 20 traces) to verify your evaluation pipeline works correctly. Once confirmed, scale up to larger batches for statistically meaningful comparisons. I maintain a "golden set" of challenging queries that I re evaluate after every significant change.
+
+
 
 ### 4.7 Docker Containerization
 
@@ -275,7 +433,7 @@ ollama pull gemma3:4b
 ollama pull mxbai-embed-large:latest
 ```
 
-### 5.2 Installation with uv
+### 5.2 Installation with uv (Recommended)
 
 I recommend uv for dependency management because it provides fast resolution and consistent environments. Install uv following the official documentation, then clone and sync.
 
@@ -446,7 +604,14 @@ docker compose up api -d
 
 Documents can be uploaded through the UI or API.
 
-Through the UI, navigate to the Documents tab and use the file uploader. Multiple files can be selected simultaneously. Supported formats include PDF, DOCX, TXT, and HTML.
+<p align="center">
+  <img src="assets/agentic_rag_04.png" alt="Document Upload Interface" width="800">
+</p>
+
+Through the UI, navigate to the Documents tab and use the file uploader. The interface shows drag and drop functionality along with a file browser. Multiple files can be selected simultaneously and the system processes them in batch. Supported formats include PDF, DOCX, TXT, and HTML. After upload, the documents appear in the "Uploaded Documents" list where you can select which ones to include in your queries or clear the entire collection.
+
+> [!NOTE]
+> Document processing includes text extraction, chunking, embedding generation, and vector storage. For large PDFs (100+ pages), expect processing to take several seconds depending on your hardware. The UI shows a spinner during processing and displays chunk counts upon completion.
 
 Through the API, send a multipart POST request:
 
@@ -526,7 +691,7 @@ Memory requires PostgreSQL to be configured. Check the response for `memory_enab
 
 ### 6.4 Running RAGAS Evaluation
 
-After collecting traces in Langfuse, run the evaluation script to compute quality metrics.
+After collecting traces in Langfuse, run the evaluation script to compute quality metrics. The script connects to your Langfuse instance, fetches traces matching your specified tag, and evaluates each one using RAGAS metrics locally through Ollama.
 
 ```bash
 # Evaluate traces with a specific tag
@@ -542,7 +707,13 @@ With pip installation:
 python scripts/ragas_eval_langfuse.py --tag ragas_eval --limit 20
 ```
 
-The script fetches traces, extracts the required fields, computes metrics locally using Ollama, and pushes scores back to Langfuse.
+The terminal output shows real time progress as traces are evaluated. Each trace requires multiple LLM calls to compute faithfulness and context precision, so the progress bar helps you estimate completion time. The script handles timeout errors gracefully, logging them without crashing, which is important when running long evaluation batches.
+
+> [!CAUTION]
+> Evaluation can be resource intensive. Each trace evaluation involves multiple LLM inference calls. If you see excessive timeout errors, consider reducing batch size, increasing timeout thresholds, or evaluating during off peak hours when your machine has more available resources.
+
+The script fetches traces, extracts the required fields (question, answer, contexts), computes metrics locally using Ollama, and pushes scores back to Langfuse. After completion, navigate to the Langfuse dashboard to view score distributions and identify underperforming traces for investigation. See [Section 4.6 RAGAS Evaluation](#46-ragas-evaluation) for detailed examples of evaluation runs and score interpretation.
+
 
 ---
 
@@ -751,8 +922,4 @@ uv run pytest tests/ -v --cov=src/agentic_rag --cov-report=term-missing
 
 Tests cover core functionality including metadata filter construction and retrieval logic. I structured tests to run without external dependencies so they execute quickly during development.
 
----
 
-## 10. License
-
-This project is provided for educational and research purposes. See the LICENSE file for terms of use.
