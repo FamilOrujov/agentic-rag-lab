@@ -73,6 +73,7 @@
    - 8.2 [LLM Configuration](#82-llm-configuration)
    - 8.3 [Storage Settings](#83-storage-settings)
 9. [Testing](#9-testing)
+   - 9.1 [Keploy API Testing](#91-keploy-api-testing)
 
 ---
 
@@ -921,5 +922,255 @@ uv run pytest tests/ -v --cov=src/agentic_rag --cov-report=term-missing
 ```
 
 Tests cover core functionality including metadata filter construction and retrieval logic. I structured tests to run without external dependencies so they execute quickly during development.
+
+### 9.1 Keploy API Testing
+
+I integrated Keploy for API regression testing because I wanted a way to capture real production traffic and replay it deterministically. Unlike traditional unit tests that require manual assertion writing, Keploy records actual HTTP request and response pairs, then uses those recordings to verify that the API behaves consistently across code changes. This approach is particularly valuable for RAG systems where responses depend on complex chains of retrieval and LLM calls.
+
+#### What is Keploy
+
+Keploy is an open source API testing tool that works by intercepting network traffic at the system level. When I run my FastAPI application under Keploy, it captures every HTTP request that comes in and every response that goes out. These recordings become regression tests automatically, no manual test writing required.
+
+The key insight is that Keploy operates at the network layer rather than the application layer. This means it captures the real behavior of the entire stack, including database calls, external API interactions, and LLM responses. For my RAG system, this captures the full pipeline from query to response.
+
+#### Installing Keploy
+
+Keploy runs as a binary on Linux. The installation is straightforward using their official script.
+
+```bash
+# Install Keploy on Linux
+curl -O -L https://keploy.io/install.sh && source install.sh
+
+# Verify installation
+keploy --version
+```
+
+> [!IMPORTANT]
+> Keploy requires root privileges for network interception on Linux. The test and record scripts use `sudo` to ensure proper permissions. On some systems, you may need to configure passwordless sudo for the keploy binary.
+
+For other operating systems, check the official Keploy documentation. The tool works best on Linux due to its eBPF based network interception.
+
+#### Recording Tests
+
+The recording workflow starts by running the API under Keploy in record mode. I created dedicated scripts to simplify this process.
+
+```bash
+# Start the API under Keploy and begin recording
+bash scripts/keploy_record.sh
+```
+
+This script reads `keploy.yaml` which defines how to start the application.
+
+```yaml
+# keploy.yaml
+path: "."
+command: "bash scripts/keploy_app.sh"
+port: 8000
+debug: true
+
+test:
+  delay: 2
+  apiTimeout: 15
+  ignoreOrdering: false
+
+record:
+  filters: []
+```
+
+The `command` field points to a helper script that starts the FastAPI server with isolated directories for testing.
+
+```bash
+# scripts/keploy_app.sh
+set -euo pipefail
+
+# Separate directories for Keploy so I don't destroy my real dev data
+export CHROMA_DIR="${CHROMA_DIR:-./.chroma_keploy}"
+export UPLOAD_DIR="${UPLOAD_DIR:-./data/uploads_keploy}"
+
+mkdir -p "$CHROMA_DIR" "$UPLOAD_DIR"
+
+exec uv run uvicorn agentic_rag.api.main:app --app-dir src --host 127.0.0.1 --port 8000
+```
+
+This isolation is critical. During test recording and replay, Keploy creates and destroys test data freely. By pointing ChromaDB and uploads to separate directories, I protect my actual development data from test side effects.
+
+While Keploy is recording, I exercise the API endpoints I want to test. Health checks, document retrieval, chat queries, anything that represents realistic usage patterns.
+
+```bash
+# Example requests during recording
+curl http://127.0.0.1:8000/health
+
+curl -X POST http://127.0.0.1:8000/chat/retrieve \
+  -H "Content-Type: application/json" \
+  -d '{"query":"What is this document about?","k":6}'
+
+curl -X POST http://127.0.0.1:8000/chat/ask_agentic \
+  -H "Content-Type: application/json" \
+  -d '{"query":"Summarize the key findings"}'
+```
+
+Each request and response pair gets captured as a YAML file in the `keploy/` directory.
+
+#### Pass Through Ports
+
+One challenge with recording LLM applications is that embedding and inference calls produce large, non deterministic responses. If Keploy mocked these calls entirely, the mock files would be enormous and the tests would be brittle.
+
+I solved this by configuring Keploy to pass through Ollama traffic rather than intercepting it.
+
+```bash
+# scripts/keploy_report.sh
+APP_CMD='uv run uvicorn agentic_rag.api.main:app --app-dir src --host 127.0.0.1 --port 8000'
+
+# Keep Ollama real so Keploy does not create giant mocks for embedding vectors
+sudo -E env "PATH=$PATH" keploy record \
+  -c "$APP_CMD" \
+  -p ./keploy \
+  --delay 2 \
+  --pass-through-ports 11434 \
+  --debug
+```
+
+The `--pass-through-ports 11434` flag tells Keploy to ignore traffic on Ollama's port. During both recording and replay, LLM calls hit the real Ollama instance. This means tests validate the actual end to end behavior rather than replaying cached LLM responses, which is what I wanted for comprehensive regression testing.
+
+> [!NOTE]
+> If you switch to hosted LLM providers like OpenAI or Anthropic, you can remove the pass through port configuration or modify it to pass through the appropriate API endpoints.
+
+#### Test Set Structure
+
+Keploy organizes recordings into test sets. Each recording session creates a new test set directory.
+
+```
+keploy/
+├── keploy/
+│   └── test-set-0/
+│       └── tests/
+│           └── test-1.yaml
+├── test-set-1/
+│   └── tests/
+│       └── test-1.yaml
+├── test-set-2/
+│   └── tests/
+│       ├── test-1.yaml
+│       ├── test-2.yaml
+│       ├── test-3.yaml
+│       ├── test-4.yaml
+│       ├── test-5.yaml
+│       └── test-6.yaml
+└── reports/
+    └── ...
+```
+
+Each test YAML file contains the complete request and response with metadata.
+
+```yaml
+# Example: keploy/test-set-2/tests/test-1.yaml
+# Generated by Keploy (3.1.0)
+version: api.keploy.io/v1beta1
+kind: Http
+name: test-1
+spec:
+  metadata: {}
+  req:
+    method: POST
+    proto_major: 1
+    proto_minor: 1
+    url: http://127.0.0.1:8000/chat/retrieve
+    header:
+      Accept: '*/*'
+      Content-Length: "46"
+      Content-Type: application/json
+      Host: 127.0.0.1:8000
+      User-Agent: curl/8.11.1
+    body: '{"query":"What is this document about?","k":6}'
+    timestamp: 2025-12-29T20:44:00.941981738+04:00
+  resp:
+    status_code: 200
+    header:
+      Content-Type: application/json
+      Server: uvicorn
+    body: '{"chunks":[...]}'
+    status_message: OK
+  assertions:
+    noise:
+      header.Date: []
+  created: 1767026641
+curl: |-
+  curl --request POST \
+    --url http://127.0.0.1:8000/chat/retrieve \
+    --header 'Content-Type: application/json' \
+    --data '{"query":"What is this document about?","k":6}'
+```
+
+The file captures everything: HTTP method, headers, request body, response status, response headers, and response body. The `assertions.noise` section specifies which headers to ignore during comparison because values like `Date` change on every request.
+
+Keploy also generates equivalent curl commands for each test, which I find useful for manual debugging.
+
+#### Replaying Tests
+
+To run the recorded tests, I use the test script which replays all captured traffic and compares responses against the recordings.
+
+```bash
+# Replay all recorded tests
+bash scripts/keploy_test.sh
+```
+
+The test script mirrors the record script configuration.
+
+```bash
+# scripts/keploy_test.sh
+set -euo pipefail
+
+APP_CMD='uv run uvicorn agentic_rag.api.main:app --app-dir src --host 127.0.0.1 --port 8000'
+
+sudo -E env "PATH=$PATH" keploy test \
+  -c "$APP_CMD" \
+  -p ./keploy \
+  --delay 2 \
+  --pass-through-ports 11434 \
+  --debug
+```
+
+The `--delay 2` flag gives the API two seconds to start before Keploy begins sending test requests. For slower hardware, increase this value to avoid false failures from startup race conditions.
+
+During replay, Keploy starts the API, sends each recorded request, and compares the actual response against the expected response from the recording. Differences are flagged as test failures with detailed diffs showing exactly what changed.
+
+#### Configuration Reference
+
+The complete `keploy.yaml` configuration:
+
+```yaml
+path: "."
+command: "bash scripts/keploy_app.sh"
+port: 8000
+debug: true
+
+test:
+  delay: 2           # Seconds to wait before sending test requests
+  apiTimeout: 15     # Maximum seconds to wait for API response
+  ignoreOrdering: false  # Whether to ignore JSON array ordering
+
+record:
+  filters: []        # URL patterns to exclude from recording
+
+globalNoise:
+  global: {}         # Headers/fields to ignore globally
+  test-sets: {}      # Per test set noise configuration
+```
+
+> [!TIP]
+> After refactoring internal code, I run the recorded tests to verify that external behavior remains identical. Any response differences surface immediately, making it easy to distinguish intentional changes from regressions. This is especially valuable for the RAG pipeline where small prompt changes can cascade into unexpected output changes.
+
+#### When to Use Keploy vs Pytest
+
+I use both testing approaches for different purposes.
+
+**Pytest** is better for unit testing individual functions, testing edge cases systematically, and running in CI without network dependencies.
+
+**Keploy** is better for regression testing the full API surface, capturing realistic request patterns from development sessions, and validating that refactors preserve external behavior.
+
+In practice, I record Keploy tests during active development when I am exercising the API manually anyway. The recordings become free regression tests. For specific logic validation, I write targeted pytest cases.
+
+> [!CAUTION]
+> Keploy tests that recorded error responses (like 500 status codes) will expect those errors during replay. If I fix a bug, the test will fail because it expects the old broken behavior. In those cases, I delete the obsolete test recording and re record the correct behavior.
 
 
